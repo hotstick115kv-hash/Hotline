@@ -103,6 +103,8 @@ function render(){
   <div id="view"></div></main>`;
   ({list:vList,sum:vSum,new:()=>vForm(),adm:vAdm,log:vLog})[tab](W,A)}
 
+const dueOf=x=>{if(!x.rentDays||!x.installAt)return null;const d=new Date(x.installAt);if(isNaN(d))return null;d.setDate(d.getDate()+(+x.rentDays));return d};
+const late=x=>HELD.includes(x.status)&&dueOf(x)&&dueOf(x)<new Date();
 const fileOf=id=>D.files.filter(f=>f.itemId===id);
 const gv=f=>'https://drive.google.com/file/d/'+encodeURIComponent(f.fileId)+'/view';
 const fdelBtn=(f,W)=>W&&(me.r==='admin'||f.by===me.n)?`<button data-act="fdel" data-id="${f.id}" aria-label="ลบไฟล์ ${esc(f.name)}">✕</button>`:'';
@@ -128,6 +130,7 @@ function itemHTML(x,W,A){
   return`<div class="loc"><div class="row"><b>📍 ${esc(x.locName)||'(ยังไม่ระบุสถานที่)'}</b><span class="badge" style="background:${COL[x.status]}">${esc(x.status)}</span></div>
   <div>${esc(c.name)} · ${esc(x.qty||0)} ${esc(c.unit)}</div>
   <div class="mu">ติดตั้ง ${fmt(x.installAt)}${last?` · สถานะนี้เมื่อ ${fmt(last[0])}`:''}</div>
+  ${dueOf(x)?`<div class="mu">เช่า ${esc(x.rentDays)} วัน · ครบกำหนดคืน ${dueOf(x).toLocaleDateString('th-TH',{dateStyle:'medium'})}${late(x)?' <b style="color:var(--dg)">เกินกำหนด</b>':''}</div>`:x.rentDays?`<div class="mu">เช่า ${esc(x.rentDays)} วัน</div>`:''}
   ${x.lat&&x.lng?`<div><a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${encodeURIComponent(x.lat+','+x.lng)}">${esc(x.lat)}, ${esc(x.lng)} (เปิดแผนที่)</a></div>`:'<div class="mu">ยังไม่มีพิกัด</div>'}
   <div class="steps">${ST.map((s,j)=>`<i class="${j<i?'d':j===i?'c':''}" title="${s}"></i>`).join('')}</div>
   ${photos(x,W)}
@@ -147,7 +150,7 @@ function vList(W,A){
   draw();$('#q').oninput=e=>{Q=e.target.value;draw()};$('#f').onchange=e=>{F=e.target.value;draw()};$('#ft').onchange=e=>{FT=e.target.value;draw()}}
 
 function vSum(){
-  const S=stats(T),den=Math.max(S.total,S.held)||1,seg=(v,c)=>`<i style="width:${Math.max(v,0)/den*100}%;background:${c}"></i>`;
+  const od=D.items.filter(late).length,S=stats(T),den=Math.max(S.total,S.held)||1,seg=(v,c)=>`<i style="width:${Math.max(v,0)/den*100}%;background:${c}"></i>`;
   const bu=s=>S.by[s].q,lg=[['คงคลัง',Math.max(S.free,0),'var(--ok)'],...HELD.map(s=>[s,bu(s),COL[s]])];
   const ev=[];D.items.forEach(x=>x.history.split(';').filter(Boolean).forEach(h=>{const[t,s,u,n]=h.split('|');ev.push({t,s,u,n,x})}));
   ev.sort((a,b)=>new Date(b.t)-new Date(a.t));
@@ -156,6 +159,7 @@ function vSum(){
   <div class="lg">${lg.map(([l,v,c])=>`<span style="--c:${c}">${l} ${v}</span>`).join('')}</div>
   ${S.free<0?`<div class="warn">คงคลังติดลบ ${-S.free} ${esc(S.u)} — ตรวจจำนวนทั้งหมดในเมนู "พัสดุ/ผู้ใช้"</div>`:''}
   ${S.reserved>Math.max(S.free,0)?`<div class="warn">จองไว้ ${S.reserved} ${esc(S.u)} แต่คงคลังมี ${Math.max(S.free,0)} — ควรเติมสต็อกก่อนจ่ายงาน</div>`:''}
+  ${od?`<div class="warn">มี ${od} รายการเกินกำหนดคืน (ทุกพัสดุ)</div>`:''}
   <p class="mu sm">"จอง" (รับเรื่อง) ยังไม่ตัดคลัง จะตัดเมื่อเปลี่ยนเป็น "จ่ายงาน"</p></div>
   <div class="card"><h3>แยกตามขั้นตอน</h3><table><tr><th>ขั้นตอน</th><th>สถานที่</th><th>${esc(S.u)}</th></tr>${ST.map(s=>`<tr><td><span class="badge" style="background:${COL[s]}">${s==='รับเรื่อง'?'จอง (รับเรื่อง)':s}</span></td><td>${S.by[s].n}</td><td>${S.by[s].q}</td></tr>`).join('')}</table></div>
   <div class="card"><h3>ภาพรวมพัสดุทุกชนิด</h3><div style="overflow-x:auto"><table><tr><th>พัสดุ</th><th>ทั้งหมด</th><th>คงคลัง</th><th>จอง</th><th>ติดตั้งหน้างาน</th></tr>${D.catalog.map(c=>{const s=stats(c.id);return`<tr><td>${esc(c.name)} (${esc(c.unit)})</td><td>${s.total}</td><td style="${s.free<0?'color:var(--dg)':''}">${s.free}</td><td>${s.reserved}</td><td>${s.held}</td></tr>`}).join('')}</table></div></div>
@@ -167,19 +171,19 @@ function locRow(v={}){
   <label>ชื่อสถานที่</label><input class="n" value="${esc(v.locName)}">
   <div class="g2"><div><label>Latitude</label><input class="la" inputmode="decimal" placeholder="วาง “lat, long” ได้" value="${esc(v.lat)}"></div><div><label>Longitude</label><input class="lo" inputmode="decimal" value="${esc(v.lng)}"></div></div>
   <div class="acts"><button type="button" data-act="gps">📡 ดึงพิกัดจาก GPS</button><button type="button" data-act="map">เปิดแผนที่</button><button type="button" data-act="rm">ลบแถว</button></div>
-  <div class="g2"><div><label>จำนวน</label><input class="q" type="number" min="1" value="${esc(v.qty)}"></div><div><label>วัน-เวลาติดตั้ง</label><input class="t" type="datetime-local" value="${esc(v.installAt)}"></div></div></div>`}
+  <div class="g2"><div><label>จำนวน</label><input class="q" type="number" min="1" value="${esc(v.qty)}"></div><div><label>วัน-เวลาติดตั้ง</label><input class="t" type="datetime-local" value="${esc(v.installAt)}"></div></div><label>ระยะเวลาเช่า (วัน)</label><input class="rd" type="number" min="1" inputmode="numeric" placeholder="เช่น 7" value="${esc(v.rentDays)}"></div>`}
 
 function vForm(x){
   const e=!!x,v=x||{};
   $('#view').innerHTML=`<div class="card"><h3>${e?'แก้ไขรายการ':'เพิ่มงานใหม่'}</h3><p class="mu sm">ทุกช่องเว้นว่างได้ ถ้ากรอกจะตรวจความถูกต้องให้</p>
-  <div class="g2"><div><label>เลขคำร้อง (10 หลัก)</label><input id="f_req" inputmode="numeric" value="${esc(v.requestNo)}"></div>
-  <div><label>เลขใบสั่งงาน (10 หลัก)</label><input id="f_wo" inputmode="numeric" value="${esc(v.workOrderNo)}"></div>
+  <div class="g2"><div><label>เลขคำร้อง (12 หลัก)</label><input id="f_req" inputmode="numeric" value="${esc(v.requestNo)}"></div>
+  <div><label>เลขใบสั่งงาน (12 หลัก)</label><input id="f_wo" inputmode="numeric" value="${esc(v.workOrderNo)}"></div>
   <div><label>ชื่อผู้เช่า</label><input id="f_rn" value="${esc(v.renter)}"></div><div><label>เบอร์โทรผู้เช่า</label><input id="f_ph" inputmode="tel" value="${esc(v.phone)}"></div>
   <div><label>สถานะ</label><select id="f_st">${ST.map(s=>`<option ${(v.status||ST[0])===s?'selected':''}>${s}</option>`).join('')}</select></div>
   <div><label>วัน-เวลาที่ดำเนินการ${e?' (ใช้เมื่อเปลี่ยนสถานะ)':''}</label><input id="f_at" type="datetime-local" value="${nowLocal()}"></div></div>
   <div id="locs">${locRow(v)}</div>
   ${e?'<p class="mu sm">การแก้เลขคำร้อง/ใบสั่งงาน/ผู้เช่า จะมีผลกับทุกสถานที่ในใบสั่งงานเดียวกัน</p>':'<button type="button" data-act="addloc">+ เพิ่มสถานที่ / พัสดุอีกรายการ</button>'}
-  <p><button class="pr" data-act="submit" data-id="${esc(v.id||'')}" data-wo="${esc(v.workOrderNo||'')}">บันทึก</button> <button data-act="tab" data-k="list">ยกเลิก</button></p></div>`;tab='new'}
+  <p><button class="pr" data-act="submit" data-id="${esc(v.id||'')}" data-wo="${esc(v.workOrderNo||'')}" data-req="${esc(v.requestNo||'')}">บันทึก</button> <button data-act="tab" data-k="list">ยกเลิก</button></p></div>`;tab='new'}
 
 async function vLog(){
   const v=$('#view');
@@ -195,15 +199,16 @@ function vAdm(){
   <div><label>รหัสผ่าน (4 ตัวขึ้นไป)</label><input id="np" type="password"></div><div><label>สิทธิ์</label><select id="nr">${Object.keys(RL).map(r=>`<option value="${r}">${RL[r]}</option>`).join('')}</select></div></div>
   <p><button class="pr" data-act="adduser">เพิ่มผู้ใช้</button></p></div>`}
 
-function readForm(){
+function readForm(o={}){
   const g=id=>$('#'+id).value.trim(),job={requestNo:num(g('f_req')),workOrderNo:num(g('f_wo')),renter:g('f_rn'),phone:num(g('f_ph'))};
-  if(job.requestNo&&job.requestNo.length!==10)throw new Error('เลขคำร้องต้องเป็นตัวเลข 10 หลัก (ตอนนี้ '+job.requestNo.length+' หลัก)');
-  if(job.workOrderNo&&job.workOrderNo.length!==10)throw new Error('เลขใบสั่งงานต้องเป็นตัวเลข 10 หลัก (ตอนนี้ '+job.workOrderNo.length+' หลัก)');
+  if(job.requestNo&&job.requestNo.length!==12&&job.requestNo!==o.req)throw new Error('เลขคำร้องต้องเป็นตัวเลข 12 หลัก (ตอนนี้ '+job.requestNo.length+' หลัก)');
+  if(job.workOrderNo&&job.workOrderNo.length!==12&&job.workOrderNo!==o.wo)throw new Error('เลขใบสั่งงานต้องเป็นตัวเลข 12 หลัก (ตอนนี้ '+job.workOrderNo.length+' หลัก)');
   if(job.phone&&!/^\d{9,10}$/.test(job.phone))throw new Error('เบอร์โทรต้องเป็นตัวเลข 9-10 หลัก');
   const cl=s=>s.trim().replace(/^[,\s]+|[,\s]+$/g,'');
-  const items=[...document.querySelectorAll('.lr')].map((r,i)=>{const q=s=>r.querySelector(s).value,o={id:r.dataset.id,itemType:q('.ty'),locName:q('.n').trim(),lat:cl(q('.la')),lng:cl(q('.lo')),qty:q('.q').trim(),installAt:q('.t')},n='แถวที่ '+(i+1)+': ';
+  const items=[...document.querySelectorAll('.lr')].map((r,i)=>{const q=s=>r.querySelector(s).value,o={id:r.dataset.id,itemType:q('.ty'),locName:q('.n').trim(),lat:cl(q('.la')),lng:cl(q('.lo')),qty:q('.q').trim(),rentDays:q('.rd').trim(),installAt:q('.t')},n='แถวที่ '+(i+1)+': ';
     if(o.lat||o.lng){if(!(o.lat!==''&&Math.abs(+o.lat)<=90))throw new Error(n+'Latitude ต้องเป็นตัวเลข -90 ถึง 90');if(!(o.lng!==''&&Math.abs(+o.lng)<=180))throw new Error(n+'Longitude ต้องเป็นตัวเลข -180 ถึง 180')}
-    if(o.qty&&!(Number.isInteger(+o.qty)&&+o.qty>=1))throw new Error(n+'จำนวนต้องเป็นจำนวนเต็มตั้งแต่ 1');return o});
+    if(o.qty&&!(Number.isInteger(+o.qty)&&+o.qty>=1))throw new Error(n+'จำนวนต้องเป็นจำนวนเต็มตั้งแต่ 1');
+    if(o.rentDays&&!(Number.isInteger(+o.rentDays)&&+o.rentDays>=1))throw new Error(n+'ระยะเวลาเช่าต้องเป็นจำนวนวันเต็มตั้งแต่ 1');return o});
   if(!Object.values(job).some(Boolean)&&!items.some(o=>o.locName||o.qty))throw new Error('กรอกอย่างน้อย 1 ช่อง');
   return{job,status:$('#f_st').value,items,at:$('#f_at').value}}
 
@@ -229,11 +234,11 @@ const act={
   map:el=>{const r=el.closest('.lr');window.open('https://www.google.com/maps?q='+encodeURIComponent(r.querySelector('.la').value+','+r.querySelector('.lo').value),'_blank','noopener')},
   gps:el=>{const r=el.closest('.lr');if(!navigator.geolocation)return toast('เครื่องนี้ไม่รองรับ GPS');
     navigator.geolocation.getCurrentPosition(p=>{r.querySelector('.la').value=p.coords.latitude.toFixed(6);r.querySelector('.lo').value=p.coords.longitude.toFixed(6)},()=>toast('ดึงพิกัดไม่ได้ กรุณาอนุญาตการเข้าถึงตำแหน่ง'),{enableHighAccuracy:true,timeout:15000})},
-  submit:el=>run(async()=>{const d=readForm(),id=el.dataset.id,wo=el.dataset.wo;
+  submit:el=>run(async()=>{const d=readForm({req:el.dataset.req,wo:el.dataset.wo}),id=el.dataset.id,wo=el.dataset.wo;
     await call('save',{...d,prop:!!id&&!!wo,oldWO:wo});tab='list';toast('บันทึกแล้ว')}),
-  csv:()=>{const H=['เลขคำร้อง','ใบสั่งงาน','ผู้เช่า','โทร','พัสดุ','สถานที่','Lat','Lng','จำนวน','หน่วย','วันเวลาติดตั้ง','สถานะ','อัปเดตล่าสุด'];
+  csv:()=>{const H=['เลขคำร้อง','ใบสั่งงาน','ผู้เช่า','โทร','พัสดุ','สถานที่','Lat','Lng','จำนวน','หน่วย','ระยะเช่า(วัน)','วันเวลาติดตั้ง','สถานะ','อัปเดตล่าสุด'];
     const c=s=>'"'+String(s??'').replace(/"/g,'""')+'"',tx=s=>s?'="'+s+'"':'',L=[H.map(c).join(',')];
-    D.items.forEach(x=>L.push([tx(x.requestNo),tx(x.workOrderNo),x.renter,tx(x.phone),cat(x.itemType).name,x.locName,x.lat,x.lng,x.qty,cat(x.itemType).unit,x.installAt,x.status,x.updatedAt].map(c).join(',')));
+    D.items.forEach(x=>L.push([tx(x.requestNo),tx(x.workOrderNo),x.renter,tx(x.phone),cat(x.itemType).name,x.locName,x.lat,x.lng,x.qty,cat(x.itemType).unit,x.rentDays,x.installAt,x.status,x.updatedAt].map(c).join(',')));
     const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+L.join('\n')],{type:'text/csv'}));a.download='พัสดุ.csv';a.click()},
   pw:()=>{const o=prompt('รหัสผ่านเดิม');if(o===null)return;const p=prompt('รหัสผ่านใหม่ (4 ตัวขึ้นไป)');if(p)run(async()=>{await call('pw',{old:o,p});toast('เปลี่ยนรหัสผ่านแล้ว')})},
   catsave:el=>run(async()=>{const b=el.closest('.cb');await call('cat',{id:b.dataset.cid,name:b.querySelector('.cn').value,unit:b.querySelector('.cu').value,total:b.querySelector('.ct').value});tab='adm';render();toast('บันทึกแล้ว')}),
