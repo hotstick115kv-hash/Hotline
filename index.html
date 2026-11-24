@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>คลังฮอทไลน์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f1f6;--cd:#fff;--tx:#1d1a24;--mu:#6c6578;--bd:#e0dce6;--pr:#5b2a86;--pt:#fff;--ac:#e8710a;--dg:#b42318;--ok:#15803d}
+@media(prefers-color-scheme:dark){:root{--bg:#141118;--cd:#1f1a26;--tx:#f1eef5;--mu:#a59db3;--bd:#383044;--pr:#a77bd4;--pt:#141118;--ac:#f59a3c;--dg:#f97066;--ok:#4ade80}}
+*{box-sizing:border-box}body{margin:0;font:16px/1.5 Sarabun,"Noto Sans Thai",system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+header{background:var(--pr);color:var(--pt);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+header b{font-size:1.05rem}header small{opacity:.85;display:block}header button{color:#1d1a24}
+main{max-width:900px;margin:0 auto;padding:12px}
+.sum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.sum div{background:var(--cd);border:1px solid var(--bd);border-radius:8px;padding:8px;text-align:center}
+.sum b{font-size:1.5rem;display:block;line-height:1.2}.sum span{font-size:.8rem;color:var(--mu)}.sum .low b{color:var(--dg)}
+.typ{display:flex;align-items:center;gap:8px;margin-bottom:8px}.typ select{max-width:280px}
+nav{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+button,select,input{font:inherit;color:inherit}
+button{border:1px solid var(--bd);background:var(--cd);border-radius:8px;padding:8px 12px;cursor:pointer;min-height:40px}
+button.pr{background:var(--pr);color:var(--pt);border-color:var(--pr)}button.dg{color:var(--dg)}
+nav button.on{background:var(--pr);color:var(--pt);border-color:var(--pr)}
+:focus-visible{outline:3px solid var(--ac);outline-offset:1px}
+input,select{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--cd);min-height:40px}
+label{display:block;font-size:.85rem;color:var(--mu);margin:8px 0 2px}
+.card{background:var(--cd);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:12px}
+.card h3{margin:0 0 6px;font-size:1rem}
+.mu{color:var(--mu)}.sm{font-size:.8rem}
+.bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}.bar input{flex:2 1 200px}.bar select{flex:1 1 130px}
+.loc{border-top:1px solid var(--bd);padding:10px 0}.loc:first-of-type{border-top:0}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.badge{color:#fff;border-radius:99px;padding:1px 10px;font-size:.8rem;white-space:nowrap}
+.steps{display:flex;gap:4px;margin:6px 0}.steps i{flex:1;height:6px;border-radius:3px;background:var(--bd)}
+.steps i.d{background:var(--pr);opacity:.5}.steps i.c{background:var(--ac)}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+a{color:var(--pr)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lr,.cb{border:1px dashed var(--bd);border-radius:8px;padding:8px;margin:8px 0}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:8px;max-width:90%;z-index:99}
+table{width:100%;border-collapse:collapse}td,th{padding:6px;border-bottom:1px solid var(--bd);text-align:left;font-size:.9rem}
+.login{max-width:360px;margin:8vh auto}
+dialog{border:1px solid var(--bd);border-radius:10px;background:var(--cd);color:var(--tx);width:92%;max-width:400px}
+.stk{display:flex;height:24px;border-radius:6px;overflow:hidden;background:var(--bd);margin:6px 0}.stk i{display:block}
+.lg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.85rem}.lg span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;background:var(--c)}
+.warn{border-left:4px solid var(--dg);background:var(--bg);padding:8px 10px;margin:8px 0;border-radius:4px;font-size:.9rem}
+.ph{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}.ph figure{margin:0;width:88px;text-align:center}.ph img{width:88px;height:88px;object-fit:cover;border-radius:6px;border:1px solid var(--bd);background:var(--bd);display:block}.ph figcaption{font-size:.72rem;color:var(--mu)}.ph button,.docs button{min-height:28px;padding:0 6px;font-size:.75rem}.docs{margin:6px 0;font-size:.9rem}.docs div{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+@media(max-width:520px){.sum{grid-template-columns:repeat(2,1fr)}}
+</style></head><body>
+<div id="app"></div><div id="toast" hidden></div>
+<script>
+const ST=['รับเรื่อง','จ่ายงาน','ติดตั้งแล้วเสร็จ','รื้อถอน','คืนคลัง'];
+const HELD=['จ่ายงาน','ติดตั้งแล้วเสร็จ','รื้อถอน'];
+const COL={'รับเรื่อง':'#6c6578','จ่ายงาน':'#c2600a','ติดตั้งแล้วเสร็จ':'#15803d','รื้อถอน':'#b42318','คืนคลัง':'#1d4ed8'};
+const RL={admin:'ผู้ดูแลระบบ',staff:'เจ้าหน้าที่',viewer:'ผู้ดูอย่างเดียว'};
+const ls={get:k=>{try{return localStorage.getItem(k)||''}catch(e){return ''}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const API='https://script.google.com/macros/s/AKfycbwhUxVEGDFgbkPB_sx4r9G98lQfz1ruOXTO0LICM_C8cEHW4U9E7eS66FoJtahWqr2xag/exec';let tok=ls.get('tok'),me=null;try{me=JSON.parse(ls.get('me'))}catch(e){}
+const DEV=(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'มือถือ':'คอมพิวเตอร์')+' / '+((navigator.userAgent.match(/Edg|OPR|Firefox|Chrome|Safari/)||['อื่นๆ'])[0]);
+let LOG=null,D={items:[],catalog:[],users:[],files:[]},tab='list',Q='',F='',FT='',T='';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=s=>{if(!s)return'-';const d=new Date(s);return isNaN(d)?esc(s):d.toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'})};
+const nowLocal=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
+const num=s=>String(s||'').replace(/[๐-๙]/g,d=>'๐๑๒๓๔๕๖๗๘๙'.indexOf(d)).replace(/\D/g,'');
+const toast=m=>{const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,3500)};
+async function call(a,p={}){
+  if(!API)throw new Error('ยังไม่ได้ใส่ URL ของ Apps Script');
+  const r=await fetch(API,{method:'POST',body:JSON.stringify({a,t:tok,dev:DEV,...p})}),j=await r.json();
+  if(!j.ok){if(j.error==='SESSION'){logout();throw new Error('หมดเวลา กรุณาเข้าสู่ระบบใหม่')}throw new Error(j.error)}
+  if(j.items){D={items:j.items,catalog:j.catalog,users:j.users||D.users||[],files:j.files||D.files||[]};try{ls.set('cache',JSON.stringify(D))}catch(e){}}
+  return j}
+const run=async f=>{try{await f()}catch(e){toast(e.message)}};
+function logout(){tok='';me=null;ls.set('tok','');ls.set('me','');ls.set('cache','');LOG=null;render()}
+async function load(){await call('list');render()}
+const cat=id=>D.catalog.find(c=>c.id===id)||{name:'?',unit:''};
+function ask(title,photo){ // ถามวัน-เวลาที่ดำเนินการ
+  return new Promise(res=>{const d=document.createElement('dialog');
+    d.innerHTML=`<form method="dialog"><h3>${esc(title)}</h3><label>วัน-เวลาที่ดำเนินการ</label><input type="datetime-local" id="d_at" value="${nowLocal()}" required><label>หมายเหตุ (ถ้ามี)</label><input id="d_nt">${photo?'<label>แนบภาพถ่าย (ไม่บังคับ)</label><input type="file" id="d_ph" accept="image/*" multiple>':''}<p><button value="ok" class="pr">ยืนยัน</button> <button value="x" formnovalidate>ยกเลิก</button></p></form>`;
+    document.body.append(d);
+    d.addEventListener('close',()=>{const r=d.returnValue==='ok'?{at:d.querySelector('#d_at').value,note:d.querySelector('#d_nt').value,files:[...(d.querySelector('#d_ph')?.files||[])]}:null;d.remove();res(r)});
+    d.showModal()})}
+
+function stats(t){
+  const c=cat(t),by={};ST.forEach(s=>by[s]={n:0,q:0});
+  D.items.filter(x=>x.itemType===t).forEach(x=>{by[x.status].n++;by[x.status].q+=+x.qty||0});
+  const held=HELD.reduce((a,s)=>a+by[s].q,0);
+  return{c,by,held,free:(c.total||0)-held,reserved:by['รับเรื่อง'].q,total:c.total||0,u:c.unit}}
+
+function render(){
+  const root=$('#app');
+  if(!tok||!me){root.innerHTML=`<main class="login card"><h2 style="margin-top:0">คลังฮอทไลน์</h2>
+  <label>ชื่อผู้ใช้</label><input id="lu" autocomplete="username">
+  <label>รหัสผ่าน</label><input id="lp" type="password" autocomplete="current-password">
+  
+  <p><button class="pr" data-act="login" style="width:100%">เข้าสู่ระบบ</button></p></main>`;return}
+  const W=me.r!=='viewer',A=me.r==='admin';
+  if(!D.catalog.find(c=>c.id===T))T=D.catalog[0]?.id||'';
+  const S=stats(T);
+  root.innerHTML=`<header><div><b>คลังฮอทไลน์</b><small>${esc(me.n)} · ${RL[me.r]}</small></div>
+  <div><button data-act="pw">เปลี่ยนรหัสผ่าน</button> <button data-act="logout">ออก</button></div></header><main>
+  <div class="typ"><span class="mu">พัสดุ</span><select data-act="ptype">${D.catalog.map(c=>`<option value="${c.id}" ${c.id===T?'selected':''}>${esc(c.name)}</option>`).join('')}</select></div>
+  <div class="sum"><div><b>${S.total}</b><span>ทั้งหมด (${esc(S.u)})</span></div><div><b>${S.held}</b><span>ติดตั้งหน้างาน</span></div>
+  <div class="${S.free<0?'low':''}"><b>${S.free}</b><span>คงคลัง</span></div><div><b>${S.reserved}</b><span>จอง</span></div></div>
+  <nav>${[['list','รายการ'],['sum','แดชบอร์ด'],...(W?[['new','+ เพิ่มงาน']]:[]),...(A?[['adm','พัสดุ/ผู้ใช้'],['log','ประวัติใช้งาน']]:[])].map(([k,l])=>`<button class="${tab===k?'on':''}" data-act="tab" data-k="${k}">${l}</button>`).join('')}</nav>
+  <div id="view"></div></main>`;
+  ({list:vList,sum:vSum,new:()=>vForm(),adm:vAdm,log:vLog})[tab](W,A)}
+
+const fileOf=id=>D.files.filter(f=>f.itemId===id);
+const gv=f=>'https://drive.google.com/file/d/'+encodeURIComponent(f.fileId)+'/view';
+const fdelBtn=(f,W)=>W&&(me.r==='admin'||f.by===me.n)?`<button data-act="fdel" data-id="${f.id}" aria-label="ลบไฟล์ ${esc(f.name)}">✕</button>`:'';
+function photos(x,W){const p=fileOf(x.id).filter(f=>f.kind==='photo');
+  return p.length?`<div class="ph">${p.map(f=>`<figure><a target="_blank" rel="noopener" href="${gv(f)}"><img loading="lazy" src="https://drive.google.com/thumbnail?id=${encodeURIComponent(f.fileId)}&sz=w240" alt="ภาพ${f.stage==='รื้อถอน'?'รื้อถอน':'ติดตั้ง'}"></a><figcaption>${f.stage==='รื้อถอน'?'รื้อถอน':'ติดตั้ง'} ${fdelBtn(f,W)}</figcaption></figure>`).join('')}</div>`:''}
+function docsHTML(arr,W){const d=arr.flatMap(x=>fileOf(x.id).filter(f=>f.kind==='doc'));
+  return d.length||W?`<div class="docs">${d.map(f=>`<div>📄 <a target="_blank" rel="noopener" href="${gv(f)}">${esc(f.name)}</a>${fdelBtn(f,W)}</div>`).join('')}${W?`<button data-act="adddoc" data-id="${arr[0].id}">📎 แนบไฟล์คำร้อง</button>`:''}</div>`:''}
+function pick(acc,cb){const i=document.createElement('input');i.type='file';i.multiple=true;if(acc)i.accept=acc;i.onchange=()=>cb([...i.files]);i.click()}
+const b64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(f)});
+async function shrink(f){ // ย่อภาพก่อนอัปโหลด ให้เร็วและประหยัดพื้นที่
+  if(!/^image\/(jpeg|png|webp)$/.test(f.type))return f;
+  try{const bm=await createImageBitmap(f),k=Math.min(1,1600/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);
+    c.getContext('2d').drawImage(bm,0,0,c.width,c.height);const b=await new Promise(r=>c.toBlob(r,'image/jpeg',.8));
+    return new File([b],f.name.replace(/\.\w+$/,'')+'.jpg',{type:'image/jpeg'})}catch(e){return f}}
+async function uploadFiles(itemId,kind,stage,files){
+  let n=0;try{for(const f0 of files){n++;toast('กำลังอัปโหลด '+n+'/'+files.length+' ...');
+    const f=kind==='photo'?await shrink(f0):f0;if(f.size>8*1024*1024){toast(f.name+' ใหญ่เกิน 8 MB ข้ามไฟล์นี้');continue}
+    const j=await call('upload',{itemId,kind,stage,name:f.name,mime:f.type,data:await b64(f)});D.files.push(j.file);toast('แนบแล้ว '+n+'/'+files.length)}
+  }finally{try{ls.set('cache',JSON.stringify(D))}catch(e){}render()}}
+function itemHTML(x,W,A){
+  const i=ST.indexOf(x.status),c=cat(x.itemType),H=x.history.split(';').filter(Boolean).map(h=>h.split('|')),last=H[H.length-1];
+  const hist=H.map(([t,s,u,n])=>`<div>${fmt(t)} — ${esc(s)} (${esc(u)})${n?' · '+esc(n):''}</div>`).join('');
+  return`<div class="loc"><div class="row"><b>📍 ${esc(x.locName)||'(ยังไม่ระบุสถานที่)'}</b><span class="badge" style="background:${COL[x.status]}">${esc(x.status)}</span></div>
+  <div>${esc(c.name)} · ${esc(x.qty||0)} ${esc(c.unit)}</div>
+  <div class="mu">ติดตั้ง ${fmt(x.installAt)}${last?` · สถานะนี้เมื่อ ${fmt(last[0])}`:''}</div>
+  ${x.lat&&x.lng?`<div><a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${encodeURIComponent(x.lat+','+x.lng)}">${esc(x.lat)}, ${esc(x.lng)} (เปิดแผนที่)</a></div>`:'<div class="mu">ยังไม่มีพิกัด</div>'}
+  <div class="steps">${ST.map((s,j)=>`<i class="${j<i?'d':j===i?'c':''}" title="${s}"></i>`).join('')}</div>
+  ${photos(x,W)}
+  ${W?`<div class="acts">${i<4?`<button class="pr" data-act="next" data-id="${x.id}">ไปขั้น: ${ST[i+1]}</button>`:''}${A&&i>0?`<button data-act="back" data-id="${x.id}">ย้อนขั้น</button>`:''}<button data-act="phin" data-id="${x.id}">📷 ภาพติดตั้ง</button><button data-act="phout" data-id="${x.id}">📷 ภาพรื้อถอน</button><button data-act="edit" data-id="${x.id}">แก้ไข</button>${A?`<button class="dg" data-act="del" data-id="${x.id}">ลบ</button>`:''}</div>`:''}
+  <details><summary class="mu sm">ประวัติ · อัปเดต ${fmt(x.updatedAt)} โดย ${esc(x.updatedBy)}</summary><div class="sm mu">${hist}</div></details></div>`}
+
+function vList(W,A){
+  $('#view').innerHTML=`<div class="bar"><input id="q" placeholder="ค้นหา เลขคำร้อง / ใบสั่งงาน / ผู้เช่า / สถานที่" value="${esc(Q)}">
+  <select id="f"><option value="">ทุกสถานะ</option>${ST.map(s=>`<option ${F===s?'selected':''}>${s}</option>`).join('')}</select>
+  <select id="ft"><option value="">ทุกพัสดุ</option>${D.catalog.map(c=>`<option value="${c.id}" ${FT===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select></div><div id="lst"></div>`;
+  const draw=()=>{
+    const q=Q.toLowerCase(),g={};
+    D.items.filter(x=>(!F||x.status===F)&&(!FT||x.itemType===FT)&&(!q||[x.requestNo,x.workOrderNo,x.renter,x.phone,x.locName].join(' ').toLowerCase().includes(q))).forEach(x=>(g[x.workOrderNo||x.requestNo||x.id]??=[]).push(x));
+    const mx=a=>a.reduce((m,x)=>x.updatedAt>m?x.updatedAt:m,''),keys=Object.keys(g).sort((a,b)=>mx(g[b]).localeCompare(mx(g[a])));
+    $('#lst').innerHTML=keys.map(k=>{const r=g[k][0];return`<div class="card"><h3>ใบสั่งงาน ${esc(r.workOrderNo)||'-'} · คำร้อง ${esc(r.requestNo)||'-'}</h3>
+    <div class="mu">ผู้เช่า ${esc(r.renter)||'-'}${r.phone?` · <a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>`:''}</div>${docsHTML(g[k],W)}${g[k].map(x=>itemHTML(x,W,A)).join('')}</div>`}).join('')||'<p class="mu">ไม่พบรายการ กด "+ เพิ่มงาน" เพื่อบันทึกงานแรก</p>'};
+  draw();$('#q').oninput=e=>{Q=e.target.value;draw()};$('#f').onchange=e=>{F=e.target.value;draw()};$('#ft').onchange=e=>{FT=e.target.value;draw()}}
+
+function vSum(){
+  const S=stats(T),den=Math.max(S.total,S.held)||1,seg=(v,c)=>`<i style="width:${Math.max(v,0)/den*100}%;background:${c}"></i>`;
+  const bu=s=>S.by[s].q,lg=[['คงคลัง',Math.max(S.free,0),'var(--ok)'],...HELD.map(s=>[s,bu(s),COL[s]])];
+  const ev=[];D.items.forEach(x=>x.history.split(';').filter(Boolean).forEach(h=>{const[t,s,u,n]=h.split('|');ev.push({t,s,u,n,x})}));
+  ev.sort((a,b)=>new Date(b.t)-new Date(a.t));
+  $('#view').innerHTML=`<div class="card"><h3>${esc(S.c.name)}: ตอนนี้พัสดุอยู่ที่ไหน (${esc(S.u)})</h3>
+  <div class="stk">${seg(S.free,'var(--ok)')}${HELD.map(s=>seg(bu(s),COL[s])).join('')}</div>
+  <div class="lg">${lg.map(([l,v,c])=>`<span style="--c:${c}">${l} ${v}</span>`).join('')}</div>
+  ${S.free<0?`<div class="warn">คงคลังติดลบ ${-S.free} ${esc(S.u)} — ตรวจจำนวนทั้งหมดในเมนู "พัสดุ/ผู้ใช้"</div>`:''}
+  ${S.reserved>Math.max(S.free,0)?`<div class="warn">จองไว้ ${S.reserved} ${esc(S.u)} แต่คงคลังมี ${Math.max(S.free,0)} — ควรเติมสต็อกก่อนจ่ายงาน</div>`:''}
+  <p class="mu sm">"จอง" (รับเรื่อง) ยังไม่ตัดคลัง จะตัดเมื่อเปลี่ยนเป็น "จ่ายงาน"</p></div>
+  <div class="card"><h3>แยกตามขั้นตอน</h3><table><tr><th>ขั้นตอน</th><th>สถานที่</th><th>${esc(S.u)}</th></tr>${ST.map(s=>`<tr><td><span class="badge" style="background:${COL[s]}">${s==='รับเรื่อง'?'จอง (รับเรื่อง)':s}</span></td><td>${S.by[s].n}</td><td>${S.by[s].q}</td></tr>`).join('')}</table></div>
+  <div class="card"><h3>ภาพรวมพัสดุทุกชนิด</h3><div style="overflow-x:auto"><table><tr><th>พัสดุ</th><th>ทั้งหมด</th><th>คงคลัง</th><th>จอง</th><th>ติดตั้งหน้างาน</th></tr>${D.catalog.map(c=>{const s=stats(c.id);return`<tr><td>${esc(c.name)} (${esc(c.unit)})</td><td>${s.total}</td><td style="${s.free<0?'color:var(--dg)':''}">${s.free}</td><td>${s.reserved}</td><td>${s.held}</td></tr>`}).join('')}</table></div></div>
+  <div class="card"><h3>ความเคลื่อนไหวล่าสุด</h3>${ev.slice(0,6).map(e=>`<div class="loc"><b>${esc(e.s)}</b> · ${esc(cat(e.x.itemType).name)} ${esc(e.x.qty||0)} ${esc(cat(e.x.itemType).unit)}<div class="mu sm">${fmt(e.t)} · ${esc(e.x.locName)||'-'} · ใบสั่งงาน ${esc(e.x.workOrderNo)||'-'} · ${esc(e.u)}</div></div>`).join('')||'<p class="mu">ยังไม่มีความเคลื่อนไหว</p>'}
+  <button class="pr" data-act="csv">ส่งออก Excel (CSV)</button></div>`}
+
+function locRow(v={}){
+  return`<div class="lr" data-id="${esc(v.id||'')}"><label>พัสดุ</label><select class="ty">${D.catalog.map(c=>`<option value="${c.id}" ${(v.itemType||T)===c.id?'selected':''}>${esc(c.name)} (${esc(c.unit)})</option>`).join('')}</select>
+  <label>ชื่อสถานที่</label><input class="n" value="${esc(v.locName)}">
+  <div class="g2"><div><label>Latitude</label><input class="la" inputmode="decimal" placeholder="วาง “lat, long” ได้" value="${esc(v.lat)}"></div><div><label>Longitude</label><input class="lo" inputmode="decimal" value="${esc(v.lng)}"></div></div>
+  <div class="acts"><button type="button" data-act="gps">📡 ดึงพิกัดจาก GPS</button><button type="button" data-act="map">เปิดแผนที่</button><button type="button" data-act="rm">ลบแถว</button></div>
+  <div class="g2"><div><label>จำนวน</label><input class="q" type="number" min="1" value="${esc(v.qty)}"></div><div><label>วัน-เวลาติดตั้ง</label><input class="t" type="datetime-local" value="${esc(v.installAt)}"></div></div></div>`}
+
+function vForm(x){
+  const e=!!x,v=x||{};
+  $('#view').innerHTML=`<div class="card"><h3>${e?'แก้ไขรายการ':'เพิ่มงานใหม่'}</h3><p class="mu sm">ทุกช่องเว้นว่างได้ ถ้ากรอกจะตรวจความถูกต้องให้</p>
+  <div class="g2"><div><label>เลขคำร้อง (10 หลัก)</label><input id="f_req" inputmode="numeric" value="${esc(v.requestNo)}"></div>
+  <div><label>เลขใบสั่งงาน (10 หลัก)</label><input id="f_wo" inputmode="numeric" value="${esc(v.workOrderNo)}"></div>
+  <div><label>ชื่อผู้เช่า</label><input id="f_rn" value="${esc(v.renter)}"></div><div><label>เบอร์โทรผู้เช่า</label><input id="f_ph" inputmode="tel" value="${esc(v.phone)}"></div>
+  <div><label>สถานะ</label><select id="f_st">${ST.map(s=>`<option ${(v.status||ST[0])===s?'selected':''}>${s}</option>`).join('')}</select></div>
+  <div><label>วัน-เวลาที่ดำเนินการ${e?' (ใช้เมื่อเปลี่ยนสถานะ)':''}</label><input id="f_at" type="datetime-local" value="${nowLocal()}"></div></div>
+  <div id="locs">${locRow(v)}</div>
+  ${e?'<p class="mu sm">การแก้เลขคำร้อง/ใบสั่งงาน/ผู้เช่า จะมีผลกับทุกสถานที่ในใบสั่งงานเดียวกัน</p>':'<button type="button" data-act="addloc">+ เพิ่มสถานที่ / พัสดุอีกรายการ</button>'}
+  <p><button class="pr" data-act="submit" data-id="${esc(v.id||'')}" data-wo="${esc(v.workOrderNo||'')}">บันทึก</button> <button data-act="tab" data-k="list">ยกเลิก</button></p></div>`;tab='new'}
+
+async function vLog(){
+  const v=$('#view');
+  if(!LOG){v.innerHTML='<p class="mu">กำลังโหลด...</p>';try{LOG=(await call('log')).log}catch(e){return toast(e.message)}if(tab!=='log')return}
+  $('#view').innerHTML=`<div class="card"><div class="row"><h3>ประวัติการใช้งาน (300 รายการล่าสุด)</h3><button data-act="logr">รีเฟรช</button></div><div style="overflow-x:auto"><table><tr><th>เวลา</th><th>ผู้ใช้</th><th>กิจกรรม</th><th>รายละเอียด</th></tr>${LOG.map(l=>`<tr><td>${fmt(l.t)}</td><td>${esc(l.n||l.u)}<br><span class="sm mu">${esc(l.u)}</span></td><td>${esc(l.a)}</td><td class="sm">${esc(l.d)}</td></tr>`).join('')||'<tr><td colspan="4" class="mu">ยังไม่มีข้อมูล</td></tr>'}</table></div><p class="mu sm">บันทึกเวลา ผู้ใช้ กิจกรรม และอุปกรณ์ (มือถือ/คอมพิวเตอร์ + เบราว์เซอร์) ไม่รวม IP เห็นได้เฉพาะผู้ดูแลระบบ ข้อมูลทั้งหมดอยู่ในชีต Log</p></div>`}
+const catBox=c=>`<div class="cb" data-cid="${esc(c.id||'')}"><div class="g2"><div><label>ชื่อพัสดุ</label><input class="cn" value="${esc(c.name)}"></div><div><label>หน่วย</label><input class="cu" value="${esc(c.unit||'ชุด')}"></div></div>
+  <label>จำนวนทั้งหมดในคลัง</label><input class="ct" type="number" min="0" value="${c.total??0}"><p><button class="pr" data-act="catsave">${c.id?'บันทึก':'เพิ่มพัสดุ'}</button></p></div>`;
+function vAdm(){
+  $('#view').innerHTML=`<div class="card"><h3>รายการพัสดุและจำนวนในคลัง</h3>${D.catalog.map(catBox).join('')}<h3>เพิ่มพัสดุชนิดใหม่</h3>${catBox({name:'',unit:'ชุด',total:0})}</div>
+  <div class="card"><h3>ผู้ใช้งาน</h3><table>${D.users.map(u=>`<tr><td>${esc(u.u)}<br><span class="sm mu">${esc(u.n)}</span></td><td><select data-act="role" data-u="${esc(u.u)}">${Object.keys(RL).map(r=>`<option value="${r}" ${u.r===r?'selected':''}>${RL[r]}</option>`).join('')}</select></td>
+  <td><button data-act="upw" data-u="${esc(u.u)}">รหัสผ่าน</button> <button data-act="tog" data-u="${esc(u.u)}">${u.active?'ปิดบัญชี':'เปิดบัญชี'}</button></td></tr>`).join('')}</table></div>
+  <div class="card"><h3>เพิ่มผู้ใช้</h3><div class="g2"><div><label>ชื่อผู้ใช้</label><input id="nu"></div><div><label>ชื่อ-สกุล</label><input id="nn"></div>
+  <div><label>รหัสผ่าน (4 ตัวขึ้นไป)</label><input id="np" type="password"></div><div><label>สิทธิ์</label><select id="nr">${Object.keys(RL).map(r=>`<option value="${r}">${RL[r]}</option>`).join('')}</select></div></div>
+  <p><button class="pr" data-act="adduser">เพิ่มผู้ใช้</button></p></div>`}
+
+function readForm(){
+  const g=id=>$('#'+id).value.trim(),job={requestNo:num(g('f_req')),workOrderNo:num(g('f_wo')),renter:g('f_rn'),phone:num(g('f_ph'))};
+  if(job.requestNo&&job.requestNo.length!==10)throw new Error('เลขคำร้องต้องเป็นตัวเลข 10 หลัก (ตอนนี้ '+job.requestNo.length+' หลัก)');
+  if(job.workOrderNo&&job.workOrderNo.length!==10)throw new Error('เลขใบสั่งงานต้องเป็นตัวเลข 10 หลัก (ตอนนี้ '+job.workOrderNo.length+' หลัก)');
+  if(job.phone&&!/^\d{9,10}$/.test(job.phone))throw new Error('เบอร์โทรต้องเป็นตัวเลข 9-10 หลัก');
+  const cl=s=>s.trim().replace(/^[,\s]+|[,\s]+$/g,'');
+  const items=[...document.querySelectorAll('.lr')].map((r,i)=>{const q=s=>r.querySelector(s).value,o={id:r.dataset.id,itemType:q('.ty'),locName:q('.n').trim(),lat:cl(q('.la')),lng:cl(q('.lo')),qty:q('.q').trim(),installAt:q('.t')},n='แถวที่ '+(i+1)+': ';
+    if(o.lat||o.lng){if(!(o.lat!==''&&Math.abs(+o.lat)<=90))throw new Error(n+'Latitude ต้องเป็นตัวเลข -90 ถึง 90');if(!(o.lng!==''&&Math.abs(+o.lng)<=180))throw new Error(n+'Longitude ต้องเป็นตัวเลข -180 ถึง 180')}
+    if(o.qty&&!(Number.isInteger(+o.qty)&&+o.qty>=1))throw new Error(n+'จำนวนต้องเป็นจำนวนเต็มตั้งแต่ 1');return o});
+  if(!Object.values(job).some(Boolean)&&!items.some(o=>o.locName||o.qty))throw new Error('กรอกอย่างน้อย 1 ช่อง');
+  return{job,status:$('#f_st').value,items,at:$('#f_at').value}}
+
+const find=id=>D.items.find(x=>x.id===id);
+const step=(el,d)=>run(async()=>{const x=find(el.dataset.id),s=ST[ST.indexOf(x.status)+d],r=await ask('เปลี่ยนสถานะเป็น "'+s+'"',['ติดตั้งแล้วเสร็จ','รื้อถอน'].includes(s));if(!r)return;
+  x.status=s;x.history+=(x.history?';':'')+[r.at||nowLocal(),s,me.n,r.note||''].join('|');render();
+  try{await call('status',{id:x.id,status:s,at:r.at,note:r.note});render();toast('อัปเดตสถานะแล้ว');if(r.files.length)await uploadFiles(x.id,'photo',s,r.files)}catch(e){toast(e.message);load().catch(()=>{})}});
+const act={
+  login:()=>run(async()=>{const j=await call('login',{u:$('#lu').value.trim(),p:$('#lp').value});tok=j.token;me=j.user;ls.set('tok',tok);ls.set('me',JSON.stringify(me));render()}),
+  logout,
+  tab:el=>{tab=el.dataset.k;render()},
+  ptype:el=>{T=el.value;render()},
+  phin:el=>pick('image/*',fs=>run(()=>uploadFiles(el.dataset.id,'photo','ติดตั้งแล้วเสร็จ',fs))),
+  phout:el=>pick('image/*',fs=>run(()=>uploadFiles(el.dataset.id,'photo','รื้อถอน',fs))),
+  adddoc:el=>pick('',fs=>run(()=>uploadFiles(el.dataset.id,'doc','',fs))),
+  fdel:el=>confirm('ลบไฟล์นี้?')&&run(async()=>{await call('fdel',{id:el.dataset.id});D.files=D.files.filter(f=>f.id!==el.dataset.id);render()}),
+  logr:()=>{LOG=null;render()},
+  next:el=>step(el,1),back:el=>step(el,-1),
+  edit:el=>{tab='new';render();vForm(find(el.dataset.id))},
+  del:el=>confirm('ลบรายการนี้ถาวร?')&&run(async()=>{await call('del',{id:el.dataset.id});render()}),
+  addloc:()=>$('#locs').insertAdjacentHTML('beforeend',locRow()),
+  rm:el=>{if(document.querySelectorAll('.lr').length>1)el.closest('.lr').remove()},
+  map:el=>{const r=el.closest('.lr');window.open('https://www.google.com/maps?q='+encodeURIComponent(r.querySelector('.la').value+','+r.querySelector('.lo').value),'_blank','noopener')},
+  gps:el=>{const r=el.closest('.lr');if(!navigator.geolocation)return toast('เครื่องนี้ไม่รองรับ GPS');
+    navigator.geolocation.getCurrentPosition(p=>{r.querySelector('.la').value=p.coords.latitude.toFixed(6);r.querySelector('.lo').value=p.coords.longitude.toFixed(6)},()=>toast('ดึงพิกัดไม่ได้ กรุณาอนุญาตการเข้าถึงตำแหน่ง'),{enableHighAccuracy:true,timeout:15000})},
+  submit:el=>run(async()=>{const d=readForm(),id=el.dataset.id,wo=el.dataset.wo;
+    await call('save',{...d,prop:!!id&&!!wo,oldWO:wo});tab='list';toast('บันทึกแล้ว')}),
+  csv:()=>{const H=['เลขคำร้อง','ใบสั่งงาน','ผู้เช่า','โทร','พัสดุ','สถานที่','Lat','Lng','จำนวน','หน่วย','วันเวลาติดตั้ง','สถานะ','อัปเดตล่าสุด'];
+    const c=s=>'"'+String(s??'').replace(/"/g,'""')+'"',tx=s=>s?'="'+s+'"':'',L=[H.map(c).join(',')];
+    D.items.forEach(x=>L.push([tx(x.requestNo),tx(x.workOrderNo),x.renter,tx(x.phone),cat(x.itemType).name,x.locName,x.lat,x.lng,x.qty,cat(x.itemType).unit,x.installAt,x.status,x.updatedAt].map(c).join(',')));
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+L.join('\n')],{type:'text/csv'}));a.download='พัสดุ.csv';a.click()},
+  pw:()=>{const o=prompt('รหัสผ่านเดิม');if(o===null)return;const p=prompt('รหัสผ่านใหม่ (4 ตัวขึ้นไป)');if(p)run(async()=>{await call('pw',{old:o,p});toast('เปลี่ยนรหัสผ่านแล้ว')})},
+  catsave:el=>run(async()=>{const b=el.closest('.cb');await call('cat',{id:b.dataset.cid,name:b.querySelector('.cn').value,unit:b.querySelector('.cu').value,total:b.querySelector('.ct').value});tab='adm';render();toast('บันทึกแล้ว')}),
+  adduser:()=>run(async()=>{const u=$('#nu').value.trim(),p=$('#np').value;if(!u||p.length<4)throw new Error('กรอกชื่อผู้ใช้ และรหัสผ่านอย่างน้อย 4 ตัว');
+    await call('userSave',{u,n:$('#nn').value.trim()||u,p,r:$('#nr').value});tab='adm';render();toast('เพิ่มผู้ใช้แล้ว')}),
+  upw:el=>{const p=prompt('ตั้งรหัสผ่านใหม่ให้ '+el.dataset.u+' (4 ตัวขึ้นไป)');if(p&&p.length>=4)run(async()=>{await call('userSave',{u:el.dataset.u,p});toast('ตั้งรหัสผ่านแล้ว')});else if(p)toast('รหัสผ่านสั้นเกินไป')},
+  tog:el=>run(async()=>{const u=D.users.find(x=>x.u===el.dataset.u);await call('userSave',{u:u.u,r:u.r,active:!u.active});tab='adm';render()}),
+  role:el=>run(async()=>{const u=D.users.find(x=>x.u===el.dataset.u);await call('userSave',{u:u.u,r:el.value,active:u.active});tab='adm';render();toast('เปลี่ยนสิทธิ์แล้ว')})
+};
+document.addEventListener('click',e=>{const el=e.target.closest('button[data-act]');if(el&&act[el.dataset.act])act[el.dataset.act](el)});
+document.addEventListener('change',e=>{const a=e.target.dataset.act;if(e.target.tagName==='SELECT'&&(a==='role'||a==='ptype'))act[a](e.target)});
+document.addEventListener('input',e=>{ // วาง "lat, long" ช่องเดียวแล้วแยกให้อัตโนมัติ
+  if(!e.target.classList.contains('la'))return;const m=e.target.value.match(/^\s*(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if(m){e.target.value=m[1];e.target.closest('.lr').querySelector('.lo').value=m[2]}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='lp')act.login()});
+if(tok&&me){try{D=JSON.parse(ls.get('cache'))||D}catch(e){}D.files=D.files||[]}
+render();if(tok&&me)run(load);
+</script></body></html>
